@@ -1,0 +1,43 @@
+{
+  "name": "vue3-table-dynamic",
+  "private": true,
+  "version": "1.0.0",
+  "author": "tanmv",
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/brian-component-lib.umd.cjs",
+  "module": "./dist/brian-component-lib.js",
+  "exports": {
+    ".": {
+      "import": "./dist/brian-component-lib.js",
+      "require": "./dist/brian-component-lib.umd.cjs"
+    },
+    "./style.css": "./dist/style.css"
+  },
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build && vue-tsc --emitDeclarationOnly",
+    "types": "vue-tsc ",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "vue": "^3.4.21",
+    "vuedraggable": "^4.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.2",
+    "@vitejs/plugin-vue": "^2.3.1",
+    "sass": "^1.72.0",
+    "typescript": "^5.2.2",
+    "vite": "^2.9.5",
+    "vue-tsc": "^2.0.6"
+  },
+  "engines": {
+    "npm": ">=6.0.0",
+    "node": ">=14.0.0"
+  },
+  "engineStrict": true
+}
