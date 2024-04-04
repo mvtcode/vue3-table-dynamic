@@ -85,7 +85,7 @@ import { Column } from '@/interfaces/table';
 import draggable from "vuedraggable";
 
 const columns = ref<string[]>([
-  "id", "name", "name2", "status", "gender", "major", "gpa", "prorince", "address", "courses", "courses2", "action"
+  "id", "name", "name2", "status", "gender", "major", "gpa", "prorince", "address", "courses2", "action"
 ]);
 
 const columnEdit = computed({

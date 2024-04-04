@@ -62,9 +62,9 @@ const render = (template: string, values: {[key: string]: any}): string => {
   });
 }
 
-const isObject = (variable: any): boolean => {
-  return typeof variable === 'object' && variable !== null && !Array.isArray(variable);
-}
+// const isObject = (variable: any): boolean => {
+//   return typeof variable === 'object' && variable !== null && !Array.isArray(variable);
+// }
 
 const mapColumnInfo = computed(() => {
   return props.columnTemplate.reduce((map: {[alias: string]: Column}, column: Column) => {
@@ -84,18 +84,18 @@ const getHeaderName = computed(() => {
 const getValue = computed(() => {
   return (row: any, column: string) => {
     const objectRow = flattenObject(row);
-    const columnInfo: Column | undefined = getColumn.value(column);
+    const columnInfo: Column = getColumn.value(column);
     if (columnInfo) {
-      const values = row[columnInfo.field];
+      const values = row[columnInfo.field as string];
 
       if(Array.isArray(values)) {
-        if (isObject(values)) {
+        // if (isObject(values)) {
 
-        }
-        return columnInfo.templateShow ? values.map((item: any) => render(columnInfo.templateShow, {$item: item})).join('') : values.join(', ');
+        // }
+        return columnInfo.templateShow ? values.map((item: any) => render(columnInfo.templateShow as string, {$item: item})).join('') : values.join(', ');
       }
 
-      const value = columnInfo.templateShow ? render(columnInfo.templateShow, objectRow) : objectRow[columnInfo.field];
+      const value = columnInfo.templateShow ? render(columnInfo.templateShow, objectRow) : objectRow[columnInfo.field as string];
       return columnInfo?.enum && Object.keys(columnInfo.enum).length > 0 ? columnInfo.enum[value] || value : value;
     }
     return '';
