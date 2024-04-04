@@ -10,34 +10,70 @@
       <span class="link" @click="onDelete(row)"> Delete </span>
     </template>
   </DynamicTable>
-  <hr/>
+
+  <hr style="margin: 20px 0 0"/>
+
   <div class="grid">
     <div class="grid-item">
-      <h4>Table data</h4>
-        <textarea v-model="dataEdit" />
+      <h4>Columns</h4>
+      <div class="box">
+        <div class="grid-col-2">
+          <div class="edit-columns">
+            <h5>Đã chọn </h5>
+            <hr style="margin: 5px 0"/>
+            <draggable
+              tag="ul"
+              v-model="columnEdit"
+              class="dragArea list-group"
+              item-key="alias"
+              group="people"
+              @move="onMove"
+              @add="onAdd"
+              @update="onUpdate"
+            >
+              <template #item="{ element, index }">
+                <li class="list-group-item">
+                  <div class="label">
+                    ☰ {{ element.name }}
+                  </div>
+                  <div class="btn-close" @click.stop="closeIndex(index)">
+                    ✘
+                  </div>
+                </li>
+              </template>
+            </draggable>
+          </div>
+
+          <div class="edit-columns">
+            <h5>Có sẵn</h5>
+            <hr style="margin: 5px 0"/>
+            <draggable
+              tag="ul"
+              :list="columnAvaiEdit"
+              class="dragArea list-group"
+              item-key="alias"
+              :group="{ name: 'people', pull: 'clone', put: false }"
+              @move="() => false"
+            >
+              <template #item="{ element }">
+                <li class="list-group-item">
+                  <div class="label">
+                    ⊕ {{ element.name }}
+                  </div>
+                </li>
+              </template>
+            </draggable>
+          </div>
+        </div>
+      </div>
     </div>
     <div class="grid-item">
       <h4>Template columns</h4>
       <textarea v-model="columnsEdit" />
     </div>
     <div class="grid-item">
-      <h4>Columns</h4>
-      <div class="box">
-        <draggable
-          tag="ul"
-          :list="columnEdit"
-          class="list-group"
-          item-key="alias"
-          @move="onMove"
-          @update="onUpdate"
-        >
-          <template #item="{ element }">
-            <li class="list-group-item">
-              ☰ {{ element.name }}
-            </li>
-          </template>
-        </draggable>
-      </div>
+      <h4>Table data</h4>
+        <textarea v-model="dataEdit" />
     </div>
   </div>
 </template>
@@ -70,13 +106,39 @@ const columnEdit = computed({
   }
 });
 
+const columnAvaiEdit = computed({
+  get() {
+    return columnsTemplate.value.map((colum: Column) => {
+      return {
+        alias: colum.alias,
+        name: colum.name,
+      }
+    })
+  },
+
+  set(values) {
+    // columns.value = values.reduce((arr: string[], value: {alias: string, name: string}) => {
+    //   arr.push(value.alias);
+    //   return arr;
+    // }, []);
+  }
+});
+
 const onMove = () => {
   return true;
 }
 const onUpdate = (evt) => {
-  const oldIndex: number = evt.oldIndex;
-  const newIndex: number = evt.newIndex;
-  columns.value = moveIndexOfArray<string>(columns.value, oldIndex, newIndex);
+  // const oldIndex: number = evt.oldIndex;
+  // const newIndex: number = evt.newIndex;
+  // columns.value = moveIndexOfArray<string>(columns.value, oldIndex, newIndex);
+}
+
+const closeIndex = (index: number) => {
+  columns.value.splice(index, 1);
+}
+
+const onAdd = (evt) => {
+  // console.log(evt.from);
 }
 
 function moveIndexOfArray<T>(array: T[], oldIndex: number, newIndex: number): T[] {
@@ -169,7 +231,7 @@ const mapColumnsTemplate = computed(() => {
 
 const columnsEdit = computed({
   get(): string {
-    return JSON.stringify(columnsTemplate.value);
+    return JSON.stringify(columnsTemplate.value, null, 2);
   },
   set(value) {
     columnsTemplate.value = JSON.parse(value);
@@ -261,7 +323,7 @@ const data = ref([
 
 const dataEdit = computed({
   get(): string {
-    return JSON.stringify(data.value);
+    return JSON.stringify(data.value, null, 2);
   },
   set(value) {
     data.value = JSON.parse(value);
@@ -300,7 +362,7 @@ const onSelect = (column: string, row: any) => {
 
 .grid {
   display: grid;
-  grid-template-columns: auto auto auto;
+  grid-template-columns: 2fr 1fr 1fr;
 
   h4 {
     margin-bottom: 10px;
@@ -308,6 +370,28 @@ const onSelect = (column: string, row: any) => {
   
   .grid-item + .grid-item {
     margin-left: 10px;
+  }
+
+  .grid-col-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    height: calc(100% - 10px);
+
+    .edit-columns {
+      border: 1px solid #DDD;
+      border-radius: 5px;
+      padding: 5px;
+      width: calc(100% - 15px);
+      height: 100%;
+      
+      h5 {
+        margin: 0;
+      }
+    }
+
+    .edit-columns + .edit-columns {
+      margin-left: 5px;
+    }
   }
 }
 
@@ -323,16 +407,30 @@ textarea {
 
 ul.list-group {
   padding-left: 10px;
+  padding-right: 10px;
   margin: 0;
   list-style: none;
-  li {
-    cursor: pointer;
+  li.list-group-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    
     margin-top: 6px;
     &:first-child {
       margin-top: 0;
     }
 
     &.sortable-chosen {
+      color: #F00;
+    }
+
+    .label {
+      cursor: pointer;
+    }
+
+    .btn-close {
+      width: 10px;
+      cursor: pointer;
       color: #F00;
     }
   }
