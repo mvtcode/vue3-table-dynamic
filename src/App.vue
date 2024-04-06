@@ -41,8 +41,8 @@
                       <span class="handle">☰</span> <input class="input-title" type="text" v-model="element.title" placeholder="Column name"/>
                     </div>
                     <ul class="list-selected-field">
-                      <li v-for="field in element.fields" :key="field.vfCode"> {{ field.vfTitle }} </li>
-                      <li v-show="!element.fields.length" class="no-data">Kéo field vào đây</li>
+                      <li v-for="vfCode in element.fieldCodes" :key="vfCode"> {{ mapFieldInfo[vfCode]?.vfTitle }} </li>
+                      <li v-show="!element.fieldCodes.length" class="no-data">Kéo field vào đây</li>
                     </ul>
                   </div>
                   <div>
@@ -104,6 +104,13 @@ const columnsTemplate = computed(() => {
   return [...symbols.value, ...vfFields.value];
 });
 
+const mapFieldInfo = computed(() => {
+  return columnsTemplate.value.reduce((map: {[vfCode: string]: VfField}, field: VfField) => {
+    map[field.vfCode] = field;
+    return map;
+  }, {});
+});
+
 const symbols = ref<VfField[]> ([
   {
     vfTitle: '⌴',
@@ -161,18 +168,19 @@ const listSymbol = computed<VariantsField[]>(() => {
 });
 const vfFields = ref<VfField[]> ([
   {
-    vfTitle: 'Mã SV 1',
+    vfTitle: 'Mã SV',
     vfCode: 'id',
     vfType: VfType.DATA,
     vfAcutalField: 'id',
     vfActualFieldTitle: 'Mã SV',
   },
   {
-    vfTitle: 'Mã SV 2',
+    vfTitle: 'MSV: {{value}}',
     vfCode: 'id2',
     vfType: VfType.DATA,
     vfAcutalField: 'id',
     vfActualFieldTitle: 'Mã SV',
+    templateShow: 'MSV: {{value}}',
   },
   {
     vfTitle: 'Họ Tên',
@@ -208,6 +216,14 @@ const vfFields = ref<VfField[]> ([
     vfType: VfType.DATA,
     vfAcutalField: 'GPA',
     vfActualFieldTitle: 'Điểm trung bình',
+  },
+  {
+    vfTitle: 'ĐTB: {{value}}',
+    vfCode: 'gpa2',
+    vfType: VfType.DATA,
+    vfAcutalField: 'GPA',
+    vfActualFieldTitle: 'Điểm trung bình',
+    templateShow: 'ĐTB: {{value}}',
   },
   {
     vfTitle: 'Trạng thái',
@@ -359,94 +375,11 @@ const dataEdit = computed({
   }
 });
 
-const columns = ref<ColumnEdit[]>(
-  [
-    {
-      title: "Mã sinh viên",
-      fields: [{
-        vfTitle: "Mã SV 1",
-        vfCode: "id",
-        vfType: "DATA",
-        vfAcutalField: "id",
-        vfActualFieldTitle: "Mã SV"
-      }],
-      isDrag: false
-    }, {
-      title: "Họ và tên",
-      fields: [{
-        vfTitle: "Họ Tên",
-        vfCode: "name",
-        vfType: "DATA",
-        vfAcutalField: "name",
-        vfActualFieldTitle: "Họ tên"
-      }],
-      isDrag: false
-    }, {
-      title: "Ngành học",
-      fields: [{
-          vfTitle: "Ngành học",
-          vfCode: "major",
-          vfType: "DATA",
-          vfAcutalField: "major",
-          vfActualFieldTitle: "Ngành học"
-      }, {
-          vfTitle: "↩",
-          vfCode: "newline",
-          vfType: "SYMBOL",
-          vfAcutalField: "newline",
-          vfActualFieldTitle: "NewLine"
-      }, {
-          vfTitle: "Điểm trung bình",
-          vfCode: "gpa",
-          vfType: "DATA",
-          vfAcutalField: "GPA",
-          vfActualFieldTitle: "Điểm trung bình"
-      }],
-      isDrag: false
-    }, {
-      title: "Địa chỉ",
-      fields: [{
-          vfTitle: "Quận/Huyện",
-          vfCode: "districtName",
-          vfType: "DATA",
-          vfAcutalField: "address.districtName",
-          vfActualFieldTitle: "Quận/Huyện"
-      }, {
-          vfTitle: "-",
-          vfCode: "minus",
-          vfType: "SYMBOL",
-          vfAcutalField: "minus",
-          vfActualFieldTitle: "Dấu trừ"
-      }, {
-          vfTitle: "Tỉnh/TP",
-          vfCode: "provinceName",
-          vfType: "DATA",
-          vfAcutalField: "address.provinceName",
-          vfActualFieldTitle: "Tỉnh/TP"
-      }],
-      isDrag: false
-  }, {
-      title: "Trạng thái",
-      fields: [{
-          vfTitle: "Trạng thái",
-          vfCode: "status",
-          vfType: "DATA",
-          vfAcutalField: "status",
-          enum: {
-              dropout: "Thôi học",
-              studying: "Đang học",
-              graduate: "Tốt nghiệp"
-          },
-          vfActualFieldTitle: "Trạng thái"
-      }],
-      isDrag: false
-  }
-  ]
-);
+const columns = ref<ColumnEdit[]>([ { "title": "Mã sinh viên", "fieldCodes": [ "id" ], "isDrag": false }, { "title": "Họ và tên", "fieldCodes": [ "name" ], "isDrag": false }, { "title": "Ngành học", "fieldCodes": [ "major", "newline", "gpa2" ], "isDrag": false }, { "title": "Địa chỉ", "fieldCodes": [ "districtName", "space", "minus", "space", "provinceName" ], "isDrag": false }, { "title": "Giới tính", "fieldCodes": [ "gender", "newline", "age" ], "isDrag": false }, { "title": "Trạng thái", "fieldCodes": [ "status" ], "isDrag": false } ]);
 const onAddColumn = () => {
   columns.value.push({
     title: '',
-    fields: [],
+    fieldCodes: [],
     isDrag: false,
   })
 }
@@ -468,8 +401,8 @@ const onDragleave = (e: any, colum: Column,) => {
 const onDrop = (e: any, colum: Column) => {
   e.preventDefault();
   const data = toJson(e.dataTransfer.getData("text"));
-  if (data) {
-    colum.fields.push(data);
+  if (data && data.vfCode) {
+    colum.fieldCodes.push(data.vfCode);
   }
   colum.isDrag = false;
 }

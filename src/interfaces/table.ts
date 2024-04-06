@@ -35,7 +35,7 @@ export interface VariantsField {
 
 export interface Column {
   title: string;
-  fields: VfField[];
+  fieldCodes: string[];
   width?: string;
   align?: string;
   vAlign?: string;

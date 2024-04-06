@@ -46,6 +46,13 @@ function flattenObject(obj: any, parentKey: string = '', result: FlattenedObject
   return result;
 }
 
+const render = (template: string, values: {[key: string]: any}): string => {
+  return template.replace(/\{\{(.*?)\}\}/g, (match, key) => {
+    const value = values[key];
+    return (value !== undefined && value !== null) ? value : match;
+  });
+}
+
 const mapFieldInfo = computed(() => {
   return props.columnTemplate.reduce((map: {[vfCode: string]: VfField}, field: VfField) => {
     map[field.vfCode] = field;
@@ -56,16 +63,25 @@ const mapFieldInfo = computed(() => {
 const getValue = computed(() => {
   return (row: any, column: Column) => {
     const values: string[] = [];
-    for(const field of column.fields) {
-      const fieldInfo = mapFieldInfo.value[field.vfCode];
+    for(const vfCode of column.fieldCodes) {
+      const fieldInfo = mapFieldInfo.value[vfCode];
       if (fieldInfo) {
-        if (field.vfType === VfType.SYMBOL) {
+        if (fieldInfo.vfType === VfType.SYMBOL) {
           values.push(fieldInfo?.value || '');
           continue;
         }
         const objectRow = flattenObject(row);
-        const value = objectRow[fieldInfo.vfAcutalField];
-        values.push(fieldInfo?.enum && Object.keys(fieldInfo.enum).length > 0 ? fieldInfo.enum[value] || value : value);
+        let value = objectRow[fieldInfo.vfAcutalField];
+
+        if (fieldInfo?.enum && Object.keys(fieldInfo.enum).length > 0) {
+          value = fieldInfo.enum[value] || value;
+        }
+
+        if (fieldInfo?.templateShow) {
+          value = render(fieldInfo?.templateShow, {value})
+        }
+
+        values.push(value);
       }
     }
     return values.join('');
