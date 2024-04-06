@@ -15,29 +15,40 @@
 
   <div class="grid">
     <div class="grid-item">
-      <h4>Columns</h4>
+      <h4>Build columns</h4>
       <div class="box">
         <div class="grid-col-2">
           <div class="edit-columns">
-            <h5>Đã chọn </h5>
+            <div class="justify-content-space-between">
+              <h5> Columns </h5>
+              <div>
+                <button class="btn-plus" @click="onAddColumn">✚</button>
+              </div>
+            </div>
             <hr style="margin: 5px 0"/>
             <draggable
               tag="ul"
-              v-model="columnEdit"
+              v-model="columns"
               class="dragArea list-group"
               item-key="alias"
               group="people"
-              @move="onMove"
-              @add="onAdd"
-              @update="onUpdate"
+              handle=".handle"
             >
               <template #item="{ element, index }">
-                <li class="list-group-item">
-                  <div class="label">
-                    ☰ {{ element.name }}
+                <li class="list-group-item" :class="{'hover': element.isDrag}">
+                  <div class="label align-items-center" @drop="e => onDrop(e, element)" @dragover="e => onDragover(e, element)" @dragleave="e => onDragleave(e, element)">
+                    <div class="align-items-center">
+                      <span class="handle">☰</span> <input class="input-title" type="text" v-model="element.title" placeholder="Column name"/>
+                    </div>
+                    <ul class="list-selected-field">
+                      <li v-for="field in element.fields" :key="field.vfCode"> {{ field.vfTitle }} </li>
+                      <li v-show="!element.fields.length" class="no-data">Kéo field vào đây</li>
+                    </ul>
                   </div>
-                  <div class="btn-close" @click.stop="closeIndex(index)">
-                    ✘
+                  <div>
+                    <button class="btn btn-close" @click.stop="closeIndex(index)">
+                      ✘
+                    </button>
                   </div>
                 </li>
               </template>
@@ -45,31 +56,31 @@
           </div>
 
           <div class="edit-columns">
-            <h5>Có sẵn</h5>
+            <h5>Fields</h5>
             <hr style="margin: 5px 0"/>
-            <draggable
-              tag="ul"
-              :list="columnAvaiEdit"
-              class="dragArea list-group"
-              item-key="alias"
-              :group="{ name: 'people', pull: 'clone', put: false }"
-              @move="() => false"
-            >
-              <template #item="{ element }">
-                <li class="list-group-item">
-                  <div class="label">
-                    ⊕ {{ element.name }}
-                  </div>
+              <ul class="list-field">
+                <li v-for="field in listFields" :key="field.field">
+                  <div class="label">{{ field.title }}:</div>
+                  <div class="item" draggable="true" @dragstart="e => onDragstart(e, vfield)" v-for="vfield in field.variants" :key="vfield.vfCode"> {{ vfield.vfTitle }} </div>
                 </li>
-              </template>
-            </draggable>
+              </ul>
+          </div>
+          <div class="edit-columns">
+            <h5>Symbol</h5>
+            <hr style="margin: 5px 0"/>
+              <ul class="list-field">
+                <li v-for="field in listSymbol" :key="field.field">
+                  <div class="label">{{ field.title }}:</div>
+                  <div class="item" draggable="true" @dragstart="e => onDragstart(e, vfield)" v-for="vfield in field.variants" :key="vfield.vfCode"> {{ vfield.vfTitle }} </div>
+                </li>
+              </ul>
           </div>
         </div>
       </div>
     </div>
     <div class="grid-item">
       <h4>Template columns</h4>
-      <textarea v-model="columnsEdit" />
+      <textarea v-model="vfFieldsEdit" />
     </div>
     <div class="grid-item">
       <h4>Table data</h4>
@@ -81,161 +92,179 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import DynamicTable from '@/components/DynamicTable.vue';
-import { Column } from '@/interfaces/table';
+import { VfField, VfType, VariantsField, Column } from '@/interfaces/table';
 import draggable from "vuedraggable";
+import { toJson } from '@/utils/parse';
 
-const columns = ref<string[]>([
-  "id", "name", "name2", "status", "gender", "major", "gpa", "prorince", "address", "courses2", "action"
+interface ColumnEdit extends Column {
+  isDrag: boolean;
+}
+
+const columnsTemplate = computed(() => {
+  return [...symbols.value, ...vfFields.value];
+});
+
+const symbols = ref<VfField[]> ([
+  {
+    vfTitle: '⌴',
+    vfCode: 'space',
+    vfType: VfType.SYMBOL,
+    vfAcutalField: 'space',
+    vfActualFieldTitle: 'Dấu cách',
+    value: '&nbsp;',
+  },
+  {
+    vfTitle: '↩',
+    vfCode: 'newline',
+    vfType: VfType.SYMBOL,
+    vfAcutalField: 'newline',
+    vfActualFieldTitle: 'NewLine',
+    value: '<br/>',
+  },
+  {
+    vfTitle: '-',
+    vfCode: 'minus',
+    vfType: VfType.SYMBOL,
+    vfAcutalField: 'minus',
+    vfActualFieldTitle: 'Dấu trừ',
+    value: '&minus;',
+  },
+  {
+    vfTitle: '|',
+    vfCode: 'vertical',
+    vfType: VfType.SYMBOL,
+    vfAcutalField: 'vertical',
+    vfActualFieldTitle: 'Dấu dọc',
+    value: '|',
+  },
 ]);
 
-const columnEdit = computed({
-  get() {
-    return columns.value.map((colum: string) => {
-      return {
-        alias: colum,
-        name: mapColumnsTemplate.value[colum],
-      }
-    })
-  },
+const listSymbol = computed<VariantsField[]>(() => {
+  const mapField: {[field: string]: number} = {};
+  const list: VariantsField = [];
 
-  set(values) {
-    columns.value = values.reduce((arr: string[], value: {alias: string, name: string}) => {
-      arr.push(value.alias);
-      return arr;
-    }, []);
+  for(const vfField of symbols.value) {
+    if (mapField[vfField.vfAcutalField] === undefined) {
+      list.push({
+        title: vfField.vfActualFieldTitle,
+        field: vfField.vfAcutalField,
+        variants: [vfField],
+      });
+
+      mapField[vfField.vfAcutalField] = list.length - 1;
+    } else {
+      list[mapField[vfField.vfAcutalField]].variants.push(vfField);
+    }
   }
+
+  return list;
 });
-
-const columnAvaiEdit = computed({
-  get() {
-    return columnsTemplate.value.map((colum: Column) => {
-      return {
-        alias: colum.alias,
-        name: colum.name,
-      }
-    })
-  },
-
-  set(values) {
-    // columns.value = values.reduce((arr: string[], value: {alias: string, name: string}) => {
-    //   arr.push(value.alias);
-    //   return arr;
-    // }, []);
-  }
-});
-
-const onMove = () => {
-  return true;
-}
-const onUpdate = (evt) => {
-  // const oldIndex: number = evt.oldIndex;
-  // const newIndex: number = evt.newIndex;
-  // columns.value = moveIndexOfArray<string>(columns.value, oldIndex, newIndex);
-}
-
-const closeIndex = (index: number) => {
-  columns.value.splice(index, 1);
-}
-
-const onAdd = (evt) => {
-  // console.log(evt.from);
-}
-
-function moveIndexOfArray<T>(array: T[], oldIndex: number, newIndex: number): T[] {
-  if (oldIndex >= array.length || oldIndex < 0 || newIndex >= array.length || newIndex < 0 || oldIndex === newIndex) {
-    return array;
-  }
-  const newArray = [...array];
-  const element = newArray.splice(oldIndex, 1)[0];
-  newArray.splice(newIndex, 0, element);
-  return newArray;
-}
-
-const columnsTemplate = ref<Column[]>([
+const vfFields = ref<VfField[]> ([
   {
-    alias: 'id',
-    field: 'id',
-    name: 'Mã SV',
-  },
-
-  {
-    alias: 'name',
-    field: 'name',
-    name: 'Họ tên',
-    cssValue: "name"
+    vfTitle: 'Mã SV 1',
+    vfCode: 'id',
+    vfType: VfType.DATA,
+    vfAcutalField: 'id',
+    vfActualFieldTitle: 'Mã SV',
   },
   {
-    alias: 'name2',
-    name: 'Name mixed',
-    templateShow: '<div>{{name}}<div><div>{{major}}</div>',
+    vfTitle: 'Mã SV 2',
+    vfCode: 'id2',
+    vfType: VfType.DATA,
+    vfAcutalField: 'id',
+    vfActualFieldTitle: 'Mã SV',
   },
   {
-    alias: 'status',
-    field: 'status',
-    name: 'Trạng thái',
+    vfTitle: 'Họ Tên',
+    vfCode: 'name',
+    vfType: VfType.DATA,
+    vfAcutalField: 'name',
+    vfActualFieldTitle: 'Họ tên',
+  },
+  {
+    vfTitle: 'Tuổi',
+    vfCode: 'age',
+    vfType: VfType.DATA,
+    vfAcutalField: 'age',
+    vfActualFieldTitle: 'Tuổi',
+  },
+  {
+    vfTitle: 'Giới tính',
+    vfCode: 'gender',
+    vfType: VfType.DATA,
+    vfAcutalField: 'gender',
+    vfActualFieldTitle: 'Giới tính',
+  },
+  {
+    vfTitle: 'Ngành học',
+    vfCode: 'major',
+    vfType: VfType.DATA,
+    vfAcutalField: 'major',
+    vfActualFieldTitle: 'Ngành học',
+  },
+  {
+    vfTitle: 'Điểm trung bình',
+    vfCode: 'gpa',
+    vfType: VfType.DATA,
+    vfAcutalField: 'GPA',
+    vfActualFieldTitle: 'Điểm trung bình',
+  },
+  {
+    vfTitle: 'Trạng thái',
+    vfCode: 'status',
+    vfType: VfType.DATA,
+    vfAcutalField: 'status',
     enum: {
       dropout: 'Thôi học',
       studying: 'Đang học',
       graduate: 'Tốt nghiệp'
-    }
+    },
+    vfActualFieldTitle: 'Trạng thái',
   },
   {
-    alias: 'gender',
-    field: 'gender',
-    name: 'Giới tính',
+    vfTitle: 'Tỉnh/TP',
+    vfCode: 'provinceName',
+    vfType: VfType.DATA,
+    vfAcutalField: 'address.provinceName',
+    vfActualFieldTitle: 'Tỉnh/TP',
   },
   {
-    alias: 'major',
-    field: 'major',
-    name: 'Ngành học',
-  },
-  {
-    alias: 'gpa',
-    field: 'GPA',
-    name: 'Điểm trung bình',
-  },
-  {
-    alias: 'courses',
-    field: 'courses',
-    name: 'Các khóa học (default)',
-  },
-  {
-    alias: 'courses2',
-    field: 'courses',
-    name: 'Các khóa học (template)',
-    templateShow: '<div>{{$item}}</div>',
-  },
-  {
-    alias: 'prorince',
-    field: 'address.provinceName',
-    name: 'Tỉnh/TP',
-  },
-  {
-    alias: 'address',
-    name: 'Địa chỉ',
-    templateShow: '{{address.districtName}}, {{address.provinceName}}',
-  },
-
-  {
-    alias: 'action',
-    name: 'Action',
+    vfTitle: 'Quận/Huyện',
+    vfCode: 'districtName',
+    vfType: VfType.DATA,
+    vfAcutalField: 'address.districtName',
+    vfActualFieldTitle: 'Quận/Huyện',
   },
 ]);
 
-const mapColumnsTemplate = computed(() => {
-  return columnsTemplate.value.reduce((map: {[alias: string]: string}, item) => {
-    map[item.alias] = item.name;
-    return map;
-  }, {});
+const vfFieldsEdit = computed({
+  get(): string {
+    return JSON.stringify(vfFields.value, null, 2);
+  },
+  set(value: string) {
+    vfFields.value = JSON.parse(value);
+  }
 });
 
-const columnsEdit = computed({
-  get(): string {
-    return JSON.stringify(columnsTemplate.value, null, 2);
-  },
-  set(value) {
-    columnsTemplate.value = JSON.parse(value);
+const listFields = computed<VariantsField[]>(() => {
+  const mapField: {[field: string]: number} = {};
+  const list: VariantsField = [];
+
+  for(const vfField of vfFields.value) {
+    if (mapField[vfField.vfAcutalField] === undefined) {
+      list.push({
+        title: vfField.vfActualFieldTitle,
+        field: vfField.vfAcutalField,
+        variants: [vfField],
+      });
+
+      mapField[vfField.vfAcutalField] = list.length - 1;
+    } else {
+      list[mapField[vfField.vfAcutalField]].variants.push(vfField);
+    }
   }
+
+  return list;
 });
 
 const data = ref([
@@ -330,24 +359,128 @@ const dataEdit = computed({
   }
 });
 
-const onDetail = (row: any) => {
-  console.log("Detail", row);
+const columns = ref<ColumnEdit[]>(
+  [
+    {
+      title: "Mã sinh viên",
+      fields: [{
+        vfTitle: "Mã SV 1",
+        vfCode: "id",
+        vfType: "DATA",
+        vfAcutalField: "id",
+        vfActualFieldTitle: "Mã SV"
+      }],
+      isDrag: false
+    }, {
+      title: "Họ và tên",
+      fields: [{
+        vfTitle: "Họ Tên",
+        vfCode: "name",
+        vfType: "DATA",
+        vfAcutalField: "name",
+        vfActualFieldTitle: "Họ tên"
+      }],
+      isDrag: false
+    }, {
+      title: "Ngành học",
+      fields: [{
+          vfTitle: "Ngành học",
+          vfCode: "major",
+          vfType: "DATA",
+          vfAcutalField: "major",
+          vfActualFieldTitle: "Ngành học"
+      }, {
+          vfTitle: "↩",
+          vfCode: "newline",
+          vfType: "SYMBOL",
+          vfAcutalField: "newline",
+          vfActualFieldTitle: "NewLine"
+      }, {
+          vfTitle: "Điểm trung bình",
+          vfCode: "gpa",
+          vfType: "DATA",
+          vfAcutalField: "GPA",
+          vfActualFieldTitle: "Điểm trung bình"
+      }],
+      isDrag: false
+    }, {
+      title: "Địa chỉ",
+      fields: [{
+          vfTitle: "Quận/Huyện",
+          vfCode: "districtName",
+          vfType: "DATA",
+          vfAcutalField: "address.districtName",
+          vfActualFieldTitle: "Quận/Huyện"
+      }, {
+          vfTitle: "-",
+          vfCode: "minus",
+          vfType: "SYMBOL",
+          vfAcutalField: "minus",
+          vfActualFieldTitle: "Dấu trừ"
+      }, {
+          vfTitle: "Tỉnh/TP",
+          vfCode: "provinceName",
+          vfType: "DATA",
+          vfAcutalField: "address.provinceName",
+          vfActualFieldTitle: "Tỉnh/TP"
+      }],
+      isDrag: false
+  }, {
+      title: "Trạng thái",
+      fields: [{
+          vfTitle: "Trạng thái",
+          vfCode: "status",
+          vfType: "DATA",
+          vfAcutalField: "status",
+          enum: {
+              dropout: "Thôi học",
+              studying: "Đang học",
+              graduate: "Tốt nghiệp"
+          },
+          vfActualFieldTitle: "Trạng thái"
+      }],
+      isDrag: false
+  }
+  ]
+);
+const onAddColumn = () => {
+  columns.value.push({
+    title: '',
+    fields: [],
+    isDrag: false,
+  })
 }
 
-const onEdit = (row: any) => {
-  console.log("Edit", row);
+const onDragstart = (e: any, field: VfField) => {
+  e.dataTransfer.setData("text", JSON.stringify(field));
 }
 
-const onDelete = (row: any) => {
-  console.log("Delete", row);
+const onDragover = (e: any, colum: Column,) => {
+  e.preventDefault();
+  colum.isDrag = true;
 }
 
-const onSelect = (column: string, row: any) => {
-  // console.log(column, row);
+const onDragleave = (e: any, colum: Column,) => {
+  e.preventDefault();
+  colum.isDrag = false;
+}
+
+const onDrop = (e: any, colum: Column) => {
+  e.preventDefault();
+  const data = toJson(e.dataTransfer.getData("text"));
+  if (data) {
+    colum.fields.push(data);
+  }
+  colum.isDrag = false;
+}
+
+const closeIndex = (index: number) => {
+  columns.value.splice(index, 1);
 }
 </script>
 
 <style lang="scss" scoped>
+
 .link {
   color: blue;
   cursor: pointer;
@@ -362,7 +495,7 @@ const onSelect = (column: string, row: any) => {
 
 .grid {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
+  grid-template-columns: 3fr 1fr 1fr;
 
   h4 {
     margin-bottom: 10px;
@@ -374,7 +507,7 @@ const onSelect = (column: string, row: any) => {
 
   .grid-col-2 {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 3fr 2fr 1fr;
     height: calc(100% - 10px);
 
     .edit-columns {
@@ -382,10 +515,60 @@ const onSelect = (column: string, row: any) => {
       border-radius: 5px;
       padding: 5px;
       width: calc(100% - 15px);
+      min-height: calc(100% - 15px);
       height: 100%;
       
       h5 {
         margin: 0;
+      }
+
+      .btn-plus {
+        width: 30px;
+        padding: 1px 0;
+        cursor: pointer;
+        color: rgb(35, 32, 211);
+        border: 1px solid;
+        border-radius: 5px;
+      }
+
+      ul.list-field {
+        padding-left: 0;
+        list-style: none;
+        margin: 0;
+        li {
+          // border: 1px solid #DDD;
+          border-radius: 5px;
+          white-space: nowrap;
+          padding: 2px 4px;
+          display: flex;
+          align-items: center;
+          margin-bottom: 4px;
+          font-size: 12px;
+
+          &:first-child {
+            margin-left: 4px;
+          }
+
+          &.no-data {
+            //
+          }
+
+          .label {
+
+          }
+          .item {
+            border-radius: 5px;
+            border: 1px solid #DDD;
+            padding: 2px 4px;
+            margin-left: 4px;
+            min-width: 20px;
+            text-align: center;
+          }
+        }
+
+        li + li {
+          margin-left: 4px;
+        }
       }
     }
 
@@ -406,40 +589,90 @@ textarea {
 }
 
 ul.list-group {
-  padding-left: 10px;
-  padding-right: 10px;
+  padding-left: 0;
+  // padding-right: 10px;
   margin: 0;
   list-style: none;
   li.list-group-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    
-    margin-top: 6px;
-    &:first-child {
-      margin-top: 0;
+    padding: 8px;
+    margin-top: 4px;
+    border: 1px solid #DDD;
+    border-radius: 5px;
+
+    &.hover {
+      border-color: #F00;
     }
 
     &.sortable-chosen {
-      color: #F00;
+      border-color: #F00;
+      cursor: move;
     }
 
     .label {
-      cursor: pointer;
+      // cursor: pointer;
+      width: 100%;
+      .input-title {
+        border: none;
+        border-bottom: 1px #ddd dotted;
+        outline: none;
+        width: 150px;
+        margin-left: 4px;
+      }
+
+      .handle {
+        cursor: move;
+      }
+
+      ul.list-selected-field {
+        padding-left: 0;
+        list-style: none;
+        margin: 0;
+        li {
+          border: 1px solid #DDD;
+          border-radius: 5px;
+          white-space: nowrap;
+          padding: 2px 4px;
+          display: inline-block;
+          margin-bottom: 4px;
+          font-size: 12px;
+          min-width: 20px;
+          text-align: center;
+
+          &:first-child {
+            margin-left: 4px;
+          }
+
+          &.no-data {
+            border: none;
+            color: #999;
+          }
+        }
+        li + li {
+          margin-left: 4px;
+        }
+      }
     }
 
-    .btn-close {
-      width: 10px;
+    .btn {
+      width: 30px;
       cursor: pointer;
-      color: #F00;
-    }
-  }
-}
+      border: 1px solid;
+      border-radius: 5px;
 
-::v-deep {
-  .dynamic-table {
-    .name {
-      color: #F00;
+      &.btn-edit {
+        color: #9290f0;
+      }
+
+      &.btn-close {
+        color: #F00;
+      }
+    }
+
+    .btn + .btn {
+      margin-left: 4px;
     }
   }
 }

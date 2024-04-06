@@ -38,3 +38,47 @@
     }
   }
 }
+
+.w-100 {
+  width: 100%;
+}
+
+.hand {
+  cursor: pointer;
+}
+
+.not-select-text {
+  -webkit-user-select: none; /* Safari */
+  -ms-user-select: none; /* IE 10 and IE 11 */
+  user-select: none; /* Standard syntax */
+}
+
+.box {
+  border: 1px solid #DDD;
+  border-radius: 5px;
+}
+
+.d-flex {
+  display: flex;
+  align-items: center;
+}
+.align-items-center {
+  display: flex;
+  align-items: center;
+}
+.justify-content-space-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.justify-content-start {
+  display: flex;
+  align-items: center;
+  justify-content: start;
+}
+.justify-content-end {
+  display: flex;
+  align-items: center;
+  justify-content: end;
+}
+
