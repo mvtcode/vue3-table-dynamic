@@ -1,18 +1,7 @@
-// export interface Column {
-//   name: string;
-//   alias: string;
-//   width?: string;
-//   field?: string;
-//   templateShow?: string;
-//   enum?: {[key: string]: string | number};
-//   isArray?: boolean;
-//   cssHeader?: string;
-//   cssValue?: string;
-// }
-
 export enum VfType {
   DATA = 'DATA',
   SYMBOL = 'SYMBOL',
+  ACTION = 'ACTION',
 }
 
 export interface VfField {
@@ -41,4 +30,6 @@ export interface Column {
   vAlign?: string;
   cssHeader?: string;
   cssValue?: string;
+
+  isDrag?: boolean;
 }
