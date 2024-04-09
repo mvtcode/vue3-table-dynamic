@@ -1,18 +1,20 @@
 <template>
-  <table class="dynamic-table">
-    <thead>
-      <tr >
-        <th v-for="(column, index) in columns" :key="index" :class="{'drag-over': column.isDrag}"> {{ column.title }}</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr v-for="(row, index) in data" :key="index">
-        <td v-for="(column, index2) in columns" :key="index2" :class="{'drag-over': column.isDrag}">
-          <div v-html="getValue(row, column, index)" />
-        </td>
-      </tr>
-    </tbody>
-  </table>
+  <div class="wrapper-table custom-scroll" :class="{fixed: fixed}" :style="{height: fixed ? `${height}px`: 'auto'}">
+    <table class="dynamic-table">
+      <thead>
+        <tr >
+          <th v-for="(column, index) in columns" :key="index" :class="{'drag-over': column.isDrag}"> {{ column.title }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="(row, index) in data" :key="index">
+          <td v-for="(column, index2) in columns" :key="index2" :class="{'drag-over': column.isDrag}">
+            <div v-html="getValue(row, column, index)" />
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -25,8 +27,12 @@ interface Props {
   columnTemplate: VfField[];
   actions: VfField[];
   data: any[];
+  height: number;
+  fixed: boolean;
 }
-const props = defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+  fixed: false,
+});
 
 interface FlattenedObject {
   [key: string]: any;

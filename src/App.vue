@@ -1,5 +1,5 @@
 <template>
-  <DynamicTable :columns="columnsEdit" :columnTemplate="vfFields" :actions="actions" :data="data" @onSelectAction="onSelectAction" />
+  <DynamicTable fixed :height="250" :columns="columnsEdit" :columnTemplate="vfFields" :actions="actions" :data="data" @onSelectAction="onSelectAction" />
 
   <hr style="margin: 20px 0 0"/>
 
