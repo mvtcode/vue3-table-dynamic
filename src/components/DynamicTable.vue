@@ -8,9 +8,7 @@
     <tbody>
       <tr v-for="(row, index) in data" :key="index">
         <td v-for="(column, index2) in columns" :key="index2" :class="{'drag-over': column.isDrag}">
-          <slot :name="`col-${index}`" :row="row">
-            <div v-html="getValue(row, column, index)" />
-          </slot>
+          <div v-html="getValue(row, column, index)" />
         </td>
       </tr>
     </tbody>
@@ -20,11 +18,12 @@
 <script setup lang="ts">
 import { defineProps, computed, onMounted, ref, onBeforeUnmount } from "vue";
 import { Column, VfField, VfType } from '@/interfaces/table';
-import { symbols, actions } from '@/constants/otherField';
+import { symbols } from '@/constants/otherField';
 
 interface Props {
   columns: Column[];
   columnTemplate: VfField[];
+  actions: VfField[];
   data: any[];
 }
 const props = defineProps<Props>();
@@ -58,7 +57,7 @@ onBeforeUnmount(() => {
 })
 
 const vfFields = computed(() => {
-  return [...symbols, ...actions, ...props.columnTemplate];
+  return [...symbols, ...props.actions, ...props.columnTemplate];
 })
 
 function flattenObject(obj: any, parentKey: string = '', result: FlattenedObject = {}): FlattenedObject {
@@ -101,20 +100,32 @@ const getValue = computed(() => {
         }
 
         if (fieldInfo.vfType === VfType.ACTION) {
-          const value = `<span class="btn btn-${fieldInfo.vfAcutalField}" onClick="${callFunction.value}('${fieldInfo.vfAcutalField}', ${index})">${fieldInfo?.value || ''}</span>`;
+          const value = `<span class="btn btn-${fieldInfo.vfAcutalField}" onClick="${callFunction.value}('${fieldInfo.vfAcutalField}', ${index})">${fieldInfo?.vfTitle || ''}</span>`;
           values.push(value);
+          continue;
+        }
+
+        if (fieldInfo.vfRenderFunc) {
+          const vFun = fieldInfo.vfRenderFunc(row, fieldInfo, index);
+          values.push(vFun);
+          continue;
+        }
+
+        const rowValue = row[fieldInfo.vfAcutalField as string];
+        if(Array.isArray(rowValue)) {
+          const vArr = fieldInfo.templateShow ? rowValue.map((item: any) => render(fieldInfo.templateShow as string, {$item: item})).join('') : rowValue.join(', ');
+          values.push(vArr);
           continue;
         }
 
         const objectRow = flattenObject(row);
         let value = objectRow[fieldInfo.vfAcutalField];
-
         if (fieldInfo?.enum && Object.keys(fieldInfo.enum).length > 0) {
           value = fieldInfo.enum[value] || value;
         }
 
         if (fieldInfo?.templateShow) {
-          value = render(fieldInfo?.templateShow, {value})
+          value = render(fieldInfo?.templateShow, {value});
         }
 
         values.push(value);

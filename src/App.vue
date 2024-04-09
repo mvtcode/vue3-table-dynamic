@@ -1,12 +1,12 @@
 <template>
-  <DynamicTable :columns="columnsEdit" :columnTemplate="vfFields" :data="data" @onSelectAction="onSelectAction" />
+  <DynamicTable :columns="columnsEdit" :columnTemplate="vfFields" :actions="actions" :data="data" @onSelectAction="onSelectAction" />
 
   <hr style="margin: 20px 0 0"/>
 
   <div class="grid">
     <div class="grid-item">
       <h4>Build columns</h4>
-      <TableEditor v-model="columnsEdit" :vfFields="vfFields" />
+      <TableEditor v-model="columnsEdit" :vfFields="vfFields" :actions="actions" />
     </div>
     <div class="grid-item">
       <h4>Template columns</h4>
@@ -57,6 +57,17 @@ const vfFields = ref<VfField[]> ([
     templateShow: 'MSV: {{value}}',
   },
   {
+    vfTitle: 'Func Show',
+    vfCode: 'idFun',
+    vfType: VfType.DATA,
+    vfAcutalField: 'id',
+    vfActualFieldTitle: 'Mã SV',
+    templateShow: 'MSV: {{value}}',
+    vfRenderFunc: (row: any) => {
+      return `ID: <strong>${row.id}</strong>`;
+    }
+  },
+  {
     vfTitle: 'Họ Tên',
     vfCode: 'name',
     vfType: VfType.DATA,
@@ -83,6 +94,31 @@ const vfFields = ref<VfField[]> ([
     vfType: VfType.DATA,
     vfAcutalField: 'major',
     vfActualFieldTitle: 'Ngành học',
+  },
+  {
+    vfTitle: 'Khóa học default',
+    vfCode: 'courses',
+    vfType: VfType.DATA,
+    vfAcutalField: 'courses',
+    vfActualFieldTitle: 'Khóa học',
+  },
+  {
+    vfTitle: 'Khóa học dọc',
+    vfCode: 'courses2',
+    vfType: VfType.DATA,
+    vfAcutalField: 'courses',
+    vfActualFieldTitle: 'Khóa học',
+    templateShow: '<div>{{$item}}</div>',
+  },
+  {
+    vfTitle: 'Khóa học Func',
+    vfCode: 'coursesFunc',
+    vfType: VfType.DATA,
+    vfAcutalField: 'courses',
+    vfActualFieldTitle: 'Khóa học',
+    vfRenderFunc: (row: any) => {
+      return row.courses.join(' | ');
+    }
   },
   {
     vfTitle: 'Điểm trung bình',
@@ -126,6 +162,30 @@ const vfFields = ref<VfField[]> ([
     vfActualFieldTitle: 'Quận/Huyện',
   },
 ]);
+
+const actions: VfField[] = [
+  {
+    vfTitle: 'Xem',
+    vfCode: 'detail',
+    vfType: VfType.ACTION,
+    vfAcutalField: 'detail',
+    vfActualFieldTitle: 'Xem',
+  },
+  {
+    vfTitle: 'Sửa',
+    vfCode: 'update',
+    vfType: VfType.ACTION,
+    vfAcutalField: 'update',
+    vfActualFieldTitle: 'Sửa',
+  },
+  {
+    vfTitle: 'Xóa',
+    vfCode: 'delete',
+    vfType: VfType.ACTION,
+    vfAcutalField: 'delete',
+    vfActualFieldTitle: 'Xóa',
+  },
+];
 
 const vfFieldsEdit = computed({
   get(): string {
@@ -228,7 +288,7 @@ const dataEdit = computed({
   }
 });
 
-const columns: Column[] = [{ "title": "Mã sinh viên", "fieldCodes": [ "id" ]}, { "title": "Họ và tên", "fieldCodes": [ "name" ]}, { "title": "Ngành học", "fieldCodes": [ "major", "newline", "gpa2" ]}, { "title": "Địa chỉ", "fieldCodes": [ "districtName", "space", "minus", "space", "provinceName" ]}, { "title": "Giới tính", "fieldCodes": [ "gender", "newline", "age" ]}, { "title": "Trạng thái", "fieldCodes": [ "status" ]}, { "title": "Actions", "fieldCodes": [ "detail", "space", "vertical", "space", "update", "space", "vertical", "space", "delete" ] } ];
+const columns: Column[] = [ { "title": "Mã sinh viên", "fieldCodes": [ "id" ] }, { "title": "Họ và tên", "fieldCodes": [ "name" ] }, { "title": "Ngành học", "fieldCodes": [ "major", "newline", "gpa2" ] }, { "title": "Khóa học", "fieldCodes": [ "courses2" ] }, { "title": "Địa chỉ", "fieldCodes": [ "districtName", "space", "minus", "space", "provinceName" ] }, { "title": "Giới tính", "fieldCodes": [ "gender", "newline", "age" ] }, { "title": "Trạng thái", "fieldCodes": [ "status" ] }, { "title": "Actions", "fieldCodes": [ "detail", "space", "vertical", "space", "update", "space", "vertical", "space", "delete" ] } ];
 
 const columnsEdit = ref<Column[]>(
   columns.map(column => {
@@ -248,7 +308,7 @@ const columnShow = computed (() => {
 
 const actionSelects = ref<string[]>([]);
 const onSelectAction = (action: string, row: any, index: number) => {
-  actionSelects.value.unshift(`Event: ${action} | index: ${index} | id: ${row.id}`);
+  actionSelects.value.push(`Event: ${action} | index: ${index} | id: ${row.id}`);
 }
 </script>
 

@@ -63,7 +63,7 @@
           <hr style="margin: 5px 0"/>
           <ul class="list-field-symbol">
             <li v-for="field in actions" :key="field.vfAcutalField">
-              <div class="item" draggable="true" @dragstart="e => onDragstart(e, field)"> {{ field.vfTitle }} </div>
+              <div class="item btn" draggable="true" @dragstart="e => onDragstart(e, field)"> {{ field.vfTitle }} </div>
             </li>
           </ul>
         </div>
@@ -77,11 +77,12 @@ import { computed } from 'vue';
 import draggable from "vuedraggable";
 import { toJson } from '@/utils/parse';
 import { VfField, VariantsField, Column } from '@/interfaces/table';
-import { symbols, actions } from '@/constants/otherField';
+import { symbols } from '@/constants/otherField';
 
 interface Props {
   modelValue: Column[];
   vfFields: VfField[];
+  actions: VfField[];
 }
 const props = defineProps<Props>();
 
@@ -99,7 +100,7 @@ const columnsEdit = computed({
 })
 
 const columnsTemplate = computed(() => {
-  return [...symbols, ...actions, ...props.vfFields];
+  return [...symbols, ...props.actions, ...props.vfFields];
 });
 
 const mapFieldInfo = computed(() => {
