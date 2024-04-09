@@ -1,79 +1,35 @@
 <template>
-  <DynamicTable :columns="columns" :columnTemplate="columnsTemplate" :data="data" @select="onSelect">
-    <template #name="{row}">
-      <a href="#"> {{ row.name }} </a>
-    </template>
-    
-    <template #action="{row}">
-      <span class="link" @click="onDetail(row)"> Detail </span> |
-      <span class="link" @click="onEdit(row)"> Edit </span> |
-      <span class="link" @click="onDelete(row)"> Delete </span>
-    </template>
-  </DynamicTable>
+  <DynamicTable fixed :height="250" :columns="columnsEdit" :columnTemplate="vfFields" :actions="actions" :data="data" @onSelectAction="onSelectAction" />
 
   <hr style="margin: 20px 0 0"/>
 
   <div class="grid">
     <div class="grid-item">
-      <h4>Columns</h4>
-      <div class="box">
-        <div class="grid-col-2">
-          <div class="edit-columns">
-            <h5>Đã chọn </h5>
-            <hr style="margin: 5px 0"/>
-            <draggable
-              tag="ul"
-              v-model="columnEdit"
-              class="dragArea list-group"
-              item-key="alias"
-              group="people"
-              @move="onMove"
-              @add="onAdd"
-              @update="onUpdate"
-            >
-              <template #item="{ element, index }">
-                <li class="list-group-item">
-                  <div class="label">
-                    ☰ {{ element.name }}
-                  </div>
-                  <div class="btn-close" @click.stop="closeIndex(index)">
-                    ✘
-                  </div>
-                </li>
-              </template>
-            </draggable>
-          </div>
-
-          <div class="edit-columns">
-            <h5>Có sẵn</h5>
-            <hr style="margin: 5px 0"/>
-            <draggable
-              tag="ul"
-              :list="columnAvaiEdit"
-              class="dragArea list-group"
-              item-key="alias"
-              :group="{ name: 'people', pull: 'clone', put: false }"
-              @move="() => false"
-            >
-              <template #item="{ element }">
-                <li class="list-group-item">
-                  <div class="label">
-                    ⊕ {{ element.name }}
-                  </div>
-                </li>
-              </template>
-            </draggable>
-          </div>
-        </div>
-      </div>
+      <h4>Build columns</h4>
+      <TableEditor v-model="columnsEdit" :vfFields="vfFields" :actions="actions" />
     </div>
     <div class="grid-item">
       <h4>Template columns</h4>
-      <textarea v-model="columnsEdit" />
+      <textarea v-model="vfFieldsEdit" class="custom-scroll" />
     </div>
     <div class="grid-item">
       <h4>Table data</h4>
-        <textarea v-model="dataEdit" />
+        <textarea v-model="dataEdit" class="custom-scroll" />
+    </div>
+  </div>
+
+  <div class="grid-2-col">
+    <div class="grid-item">
+      <h4 style="margin-bottom: 10px;">Columns</h4>
+      <div class="box column-out custom-scroll">
+        {{ columnShow }}
+      </div>
+    </div>
+    <div class="grid-item">
+      <h4 style="margin-bottom: 10px;">Actions log</h4>
+      <div class="box column-out custom-scroll">
+        <pre>{{ actionSelects.join('\n') }}</pre>
+      </div>
     </div>
   </div>
 </template>
@@ -81,160 +37,162 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import DynamicTable from '@/components/DynamicTable.vue';
-import { Column } from '@/interfaces/table';
-import draggable from "vuedraggable";
+import TableEditor from '@/components/TableEditor.vue';
+import { VfField, VfType, Column } from '@/interfaces/table';
 
-const columns = ref<string[]>([
-  "id", "name", "name2", "status", "gender", "major", "gpa", "prorince", "address", "courses2", "action"
-]);
-
-const columnEdit = computed({
-  get() {
-    return columns.value.map((colum: string) => {
-      return {
-        alias: colum,
-        name: mapColumnsTemplate.value[colum],
-      }
-    })
-  },
-
-  set(values) {
-    columns.value = values.reduce((arr: string[], value: {alias: string, name: string}) => {
-      arr.push(value.alias);
-      return arr;
-    }, []);
-  }
-});
-
-const columnAvaiEdit = computed({
-  get() {
-    return columnsTemplate.value.map((colum: Column) => {
-      return {
-        alias: colum.alias,
-        name: colum.name,
-      }
-    })
-  },
-
-  set(values) {
-    // columns.value = values.reduce((arr: string[], value: {alias: string, name: string}) => {
-    //   arr.push(value.alias);
-    //   return arr;
-    // }, []);
-  }
-});
-
-const onMove = () => {
-  return true;
-}
-const onUpdate = (evt) => {
-  // const oldIndex: number = evt.oldIndex;
-  // const newIndex: number = evt.newIndex;
-  // columns.value = moveIndexOfArray<string>(columns.value, oldIndex, newIndex);
-}
-
-const closeIndex = (index: number) => {
-  columns.value.splice(index, 1);
-}
-
-const onAdd = (evt) => {
-  // console.log(evt.from);
-}
-
-function moveIndexOfArray<T>(array: T[], oldIndex: number, newIndex: number): T[] {
-  if (oldIndex >= array.length || oldIndex < 0 || newIndex >= array.length || newIndex < 0 || oldIndex === newIndex) {
-    return array;
-  }
-  const newArray = [...array];
-  const element = newArray.splice(oldIndex, 1)[0];
-  newArray.splice(newIndex, 0, element);
-  return newArray;
-}
-
-const columnsTemplate = ref<Column[]>([
+const vfFields = ref<VfField[]> ([
   {
-    alias: 'id',
-    field: 'id',
-    name: 'Mã SV',
-  },
-
-  {
-    alias: 'name',
-    field: 'name',
-    name: 'Họ tên',
-    cssValue: "name"
+    vfTitle: 'Mã SV',
+    vfCode: 'id',
+    vfType: VfType.DATA,
+    vfAcutalField: 'id',
+    vfActualFieldTitle: 'Mã SV',
   },
   {
-    alias: 'name2',
-    name: 'Name mixed',
-    templateShow: '<div>{{name}}<div><div>{{major}}</div>',
+    vfTitle: 'MSV: {{value}}',
+    vfCode: 'id2',
+    vfType: VfType.DATA,
+    vfAcutalField: 'id',
+    vfActualFieldTitle: 'Mã SV',
+    templateShow: 'MSV: {{value}}',
   },
   {
-    alias: 'status',
-    field: 'status',
-    name: 'Trạng thái',
+    vfTitle: 'Func Show',
+    vfCode: 'idFun',
+    vfType: VfType.DATA,
+    vfAcutalField: 'id',
+    vfActualFieldTitle: 'Mã SV',
+    templateShow: 'MSV: {{value}}',
+    vfRenderFunc: (row: any) => {
+      return `ID: <strong>${row.id}</strong>`;
+    }
+  },
+  {
+    vfTitle: 'Họ Tên',
+    vfCode: 'name',
+    vfType: VfType.DATA,
+    vfAcutalField: 'name',
+    vfActualFieldTitle: 'Họ tên',
+  },
+  {
+    vfTitle: 'Tuổi',
+    vfCode: 'age',
+    vfType: VfType.DATA,
+    vfAcutalField: 'age',
+    vfActualFieldTitle: 'Tuổi',
+  },
+  {
+    vfTitle: 'Giới tính',
+    vfCode: 'gender',
+    vfType: VfType.DATA,
+    vfAcutalField: 'gender',
+    vfActualFieldTitle: 'Giới tính',
+  },
+  {
+    vfTitle: 'Ngành học',
+    vfCode: 'major',
+    vfType: VfType.DATA,
+    vfAcutalField: 'major',
+    vfActualFieldTitle: 'Ngành học',
+  },
+  {
+    vfTitle: 'Khóa học default',
+    vfCode: 'courses',
+    vfType: VfType.DATA,
+    vfAcutalField: 'courses',
+    vfActualFieldTitle: 'Khóa học',
+  },
+  {
+    vfTitle: 'Khóa học dọc',
+    vfCode: 'courses2',
+    vfType: VfType.DATA,
+    vfAcutalField: 'courses',
+    vfActualFieldTitle: 'Khóa học',
+    templateShow: '<div>{{$item}}</div>',
+  },
+  {
+    vfTitle: 'Khóa học Func',
+    vfCode: 'coursesFunc',
+    vfType: VfType.DATA,
+    vfAcutalField: 'courses',
+    vfActualFieldTitle: 'Khóa học',
+    vfRenderFunc: (row: any) => {
+      return row.courses.join(' | ');
+    }
+  },
+  {
+    vfTitle: 'Điểm trung bình',
+    vfCode: 'gpa',
+    vfType: VfType.DATA,
+    vfAcutalField: 'GPA',
+    vfActualFieldTitle: 'Điểm trung bình',
+  },
+  {
+    vfTitle: 'ĐTB: {{value}}',
+    vfCode: 'gpa2',
+    vfType: VfType.DATA,
+    vfAcutalField: 'GPA',
+    vfActualFieldTitle: 'Điểm trung bình',
+    templateShow: 'ĐTB: {{value}}',
+  },
+  {
+    vfTitle: 'Trạng thái',
+    vfCode: 'status',
+    vfType: VfType.DATA,
+    vfAcutalField: 'status',
     enum: {
       dropout: 'Thôi học',
       studying: 'Đang học',
       graduate: 'Tốt nghiệp'
-    }
+    },
+    vfActualFieldTitle: 'Trạng thái',
   },
   {
-    alias: 'gender',
-    field: 'gender',
-    name: 'Giới tính',
+    vfTitle: 'Tỉnh/TP',
+    vfCode: 'provinceName',
+    vfType: VfType.DATA,
+    vfAcutalField: 'address.provinceName',
+    vfActualFieldTitle: 'Tỉnh/TP',
   },
   {
-    alias: 'major',
-    field: 'major',
-    name: 'Ngành học',
-  },
-  {
-    alias: 'gpa',
-    field: 'GPA',
-    name: 'Điểm trung bình',
-  },
-  {
-    alias: 'courses',
-    field: 'courses',
-    name: 'Các khóa học (default)',
-  },
-  {
-    alias: 'courses2',
-    field: 'courses',
-    name: 'Các khóa học (template)',
-    templateShow: '<div>{{$item}}</div>',
-  },
-  {
-    alias: 'prorince',
-    field: 'address.provinceName',
-    name: 'Tỉnh/TP',
-  },
-  {
-    alias: 'address',
-    name: 'Địa chỉ',
-    templateShow: '{{address.districtName}}, {{address.provinceName}}',
-  },
-
-  {
-    alias: 'action',
-    name: 'Action',
+    vfTitle: 'Quận/Huyện',
+    vfCode: 'districtName',
+    vfType: VfType.DATA,
+    vfAcutalField: 'address.districtName',
+    vfActualFieldTitle: 'Quận/Huyện',
   },
 ]);
 
-const mapColumnsTemplate = computed(() => {
-  return columnsTemplate.value.reduce((map: {[alias: string]: string}, item) => {
-    map[item.alias] = item.name;
-    return map;
-  }, {});
-});
-
-const columnsEdit = computed({
-  get(): string {
-    return JSON.stringify(columnsTemplate.value, null, 2);
+const actions: VfField[] = [
+  {
+    vfTitle: 'Xem',
+    vfCode: 'detail',
+    vfType: VfType.ACTION,
+    vfAcutalField: 'detail',
+    vfActualFieldTitle: 'Xem',
   },
-  set(value) {
-    columnsTemplate.value = JSON.parse(value);
+  {
+    vfTitle: 'Sửa',
+    vfCode: 'update',
+    vfType: VfType.ACTION,
+    vfAcutalField: 'update',
+    vfActualFieldTitle: 'Sửa',
+  },
+  {
+    vfTitle: 'Xóa',
+    vfCode: 'delete',
+    vfType: VfType.ACTION,
+    vfAcutalField: 'delete',
+    vfActualFieldTitle: 'Xóa',
+  },
+];
+
+const vfFieldsEdit = computed({
+  get(): string {
+    return JSON.stringify(vfFields.value, null, 2);
+  },
+  set(value: string) {
+    vfFields.value = JSON.parse(value);
   }
 });
 
@@ -330,39 +288,44 @@ const dataEdit = computed({
   }
 });
 
-const onDetail = (row: any) => {
-  console.log("Detail", row);
-}
+const columns: Column[] = [ { "title": "Mã sinh viên", "fieldCodes": [ "id" ] }, { "title": "Họ và tên", "fieldCodes": [ "name" ] }, { "title": "Ngành học", "fieldCodes": [ "major", "newline", "gpa2" ] }, { "title": "Khóa học", "fieldCodes": [ "courses2" ] }, { "title": "Địa chỉ", "fieldCodes": [ "districtName", "space", "minus", "space", "provinceName" ] }, { "title": "Giới tính", "fieldCodes": [ "gender", "newline", "age" ] }, { "title": "Trạng thái", "fieldCodes": [ "status" ] }, { "title": "Actions", "fieldCodes": [ "detail", "space", "vertical", "space", "update", "space", "vertical", "space", "delete" ] } ];
 
-const onEdit = (row: any) => {
-  console.log("Edit", row);
-}
+const columnsEdit = ref<Column[]>(
+  columns.map(column => {
+    return {
+      ...column,
+      isDrag: false,
+    }
+  })
+);
 
-const onDelete = (row: any) => {
-  console.log("Delete", row);
-}
+const columnShow = computed (() => {
+  return columnsEdit.value.map(column => {
+    const { isDrag, ...columnInfo } = column;
+    return  columnInfo;
+  });
+});
 
-const onSelect = (column: string, row: any) => {
-  // console.log(column, row);
+const actionSelects = ref<string[]>([]);
+const onSelectAction = (action: string, row: any, index: number) => {
+  actionSelects.value.push(`Event: ${action} | index: ${index} | id: ${row.id}`);
 }
 </script>
 
 <style lang="scss" scoped>
+pre {
+  margin: 0;
+  padding: 0;
+}
+
 .link {
   color: blue;
   cursor: pointer;
 }
 
-.box {
-  border: 1px solid #DDD;
-  border-radius: 5px;
-  padding: 10px;
-  height: 390px;
-}
-
 .grid {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
+  grid-template-columns: 3fr 1fr 1fr;
 
   h4 {
     margin-bottom: 10px;
@@ -371,27 +334,24 @@ const onSelect = (column: string, row: any) => {
   .grid-item + .grid-item {
     margin-left: 10px;
   }
+}
 
-  .grid-col-2 {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    height: calc(100% - 10px);
+.grid-2-col {
+  display: grid;
+  grid-template-columns: 4fr 1fr;
 
-    .edit-columns {
-      border: 1px solid #DDD;
-      border-radius: 5px;
-      padding: 5px;
-      width: calc(100% - 15px);
-      height: 100%;
-      
-      h5 {
-        margin: 0;
-      }
+  h4 {
+    margin-bottom: 10px;
+  }
+  
+  .grid-item {
+    .column-out {
+      overflow-y: auto;
     }
+  }
 
-    .edit-columns + .edit-columns {
-      margin-left: 5px;
-    }
+  .grid-item + .grid-item {
+    margin-left: 10px;
   }
 }
 
@@ -405,42 +365,10 @@ textarea {
   padding: 5px;
 }
 
-ul.list-group {
-  padding-left: 10px;
-  padding-right: 10px;
-  margin: 0;
-  list-style: none;
-  li.list-group-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    
-    margin-top: 6px;
-    &:first-child {
-      margin-top: 0;
-    }
-
-    &.sortable-chosen {
-      color: #F00;
-    }
-
-    .label {
-      cursor: pointer;
-    }
-
-    .btn-close {
-      width: 10px;
-      cursor: pointer;
-      color: #F00;
-    }
-  }
-}
-
-::v-deep {
-  .dynamic-table {
-    .name {
-      color: #F00;
-    }
+.box {
+  &.column-out {
+    height: 100px;
+    padding: 10px;
   }
 }
 </style>

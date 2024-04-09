@@ -2,6 +2,7 @@
   width: 100%;
   margin: 0;
   border-collapse: collapse;
+  border-spacing: 0;
   // border: 1px solid;
 
   thead {
@@ -12,6 +13,7 @@
         text-align: left;
         padding: 6px 8px;
         background: #f1f1f1;
+        min-height: 24px;
       }
     }
   }
@@ -37,4 +39,114 @@
       }
     }
   }
+}
+
+.wrapper-table { 
+  &.fixed {
+    position: relative;
+    width: 100%;
+    z-index: 1;
+    overflow: auto;
+    border: 1px solid #DDD;
+
+    .dynamic-table {
+      thead {
+        tr {
+          th {
+            position: -webkit-sticky;
+            position: sticky;
+            top: -1px;
+            border-bottom: 1px solid #DDD;
+            border-top: none;
+
+            &:first-child{
+              border-left: none;
+            }
+            &:last-child {
+              border-right: none;
+            }
+          }
+        }
+      }
+      tbody {
+        tr {
+          td:first-child {
+            border-left: none;
+          }
+
+          td:last-child {
+            border-right: none;
+          }
+
+          &:last-child {
+            td {
+              // border-bottom: none;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+.w-100 {
+  width: 100%;
+}
+
+.hand {
+  cursor: pointer;
+}
+
+.not-select-text {
+  -webkit-user-select: none; /* Safari */
+  -ms-user-select: none; /* IE 10 and IE 11 */
+  user-select: none; /* Standard syntax */
+}
+
+.box {
+  border: 1px solid #DDD;
+  border-radius: 5px;
+}
+
+.d-flex {
+  display: flex;
+  align-items: center;
+}
+.align-items-center {
+  display: flex;
+  align-items: center;
+}
+.justify-content-space-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.justify-content-start {
+  display: flex;
+  align-items: center;
+  justify-content: start;
+}
+.justify-content-end {
+  display: flex;
+  align-items: center;
+  justify-content: end;
+}
+
+.custom-scroll {
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    border-radius: 5px;
+    background-color: rgba(161, 161, 161, 0.1);
+  }
+  &::-webkit-scrollbar-thumb {
+    border-radius: 5px;
+    background-color: #00000033;
+  }
+}
+
+.btn {
+  cursor: pointer;
+  color: #2320d3;
 }
