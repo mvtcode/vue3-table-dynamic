@@ -8,7 +8,7 @@
       </thead>
       <tbody>
         <tr v-for="(row, index) in data" :key="index">
-          <td v-for="(column, index2) in columns" :key="index2" :class="{'drag-over': column.isDrag}">
+          <td v-for="(column, index2) in columns" :key="index2" :class="{'drag-over': column.isDrag}" :style="{'text-align': (column.align || 'left'), 'vertical-align': (column.vAlign || 'middle')}">
             <div class="td-line" v-html="getValue(row, column, index)" />
           </td>
         </tr>

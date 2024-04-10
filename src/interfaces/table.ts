@@ -27,8 +27,8 @@ export interface Column {
   title: string;
   fieldCodes: string[];
   width?: string;
-  align?: string;
-  vAlign?: string;
+  align?: 'left' | 'center' | 'right';
+  vAlign?: 'top' | 'middle' | 'bottom';
   cssHeader?: string;
   cssValue?: string;
 

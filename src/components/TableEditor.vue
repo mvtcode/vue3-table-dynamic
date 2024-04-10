@@ -23,24 +23,31 @@
                 <div class="align-items-center">
                   <span class="handle">☰</span>
 
-                  <!-- <div class="wrapper-more">
-                    <button class="btn-more">⋯</button>
-                    <div class="popup-more">111</div>
-                  </div> -->
-
                   <Popper placement="right-start" arrow>
                     <button class="btn-more">⋯</button>
                     <template #content>
                       <div class="popover-action">
                         <div>
-                          <button class="btn-more">⋯</button>
-                          <button class="btn-more">⋯</button>
-                          <button class="btn-more">⋯</button>
+                          <button class="btn-more" :class="{active: (element.align || 'left') === 'left'}" @click="element.align = 'left'">
+                            <img :src="AlignLeftIcon" />
+                          </button>
+                          <button class="btn-more" :class="{active: element.align === 'center'}" @click="element.align = 'center'">
+                            <img :src="AlignCenterIcon" />
+                          </button>
+                          <button class="btn-more" :class="{active: element.align === 'right'}" @click="element.align = 'right'">
+                            <img :src="AlignRightIcon" />
+                          </button>
                         </div>
-                        <div>
-                          <button class="btn-more">⋯</button>
-                          <button class="btn-more">⋯</button>
-                          <button class="btn-more">⋯</button>
+                        <div style="margin-top: 4px">
+                          <button class="btn-more" :class="{active: element.vAlign === 'top'}" @click="element.vAlign = 'top'">
+                            <img :src="VerticalAlignTopIcon" />
+                          </button>
+                          <button class="btn-more" :class="{active: (element.vAlign || 'middle') === 'middle'}" @click="element.vAlign = 'middle'">
+                            <img :src="VerticalAlignCenterIcon" />
+                          </button>
+                          <button class="btn-more" :class="{active: element.vAlign === 'bottom'}" @click="element.vAlign = 'bottom'">
+                            <img :src="VerticalAlignBottomIcon" />
+                          </button>
                         </div>
                       </div>
                       <div></div>
@@ -117,8 +124,13 @@ import { toJson } from '@/utils/parse';
 import { VfField, VariantsField, Column, VfType } from '@/interfaces/table';
 import { symbols } from '@/constants/symbols';
 import Popper from "vue3-popper";
-// import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
-// import { faAlignLeft, faAlignCenter, faAlignRight } from '@fortawesome/free-solid-svg-icons'
+
+import AlignLeftIcon from '@/assets/icons/align-left.svg';
+import AlignCenterIcon from '@/assets/icons/align-center.svg';
+import AlignRightIcon from '@/assets/icons/align-right.svg';
+import VerticalAlignTopIcon from '@/assets/icons/vertal-align-top.svg';
+import VerticalAlignCenterIcon from '@/assets/icons/vertal-align-center.svg';
+import VerticalAlignBottomIcon from '@/assets/icons/vertal-align-bottom.svg';
 
 interface Props {
   modelValue: Column[];
@@ -364,25 +376,23 @@ ul.list-group {
         cursor: move;
       }
 
-      // .wrapper-more {
-      //   position: relative;
-        .btn-more {
-          background: none;
-          border-radius: 5px;
-          border: 1px solid #DDD;
-          cursor: pointer;
-          margin: 0 2px;
+      .btn-more {
+        background: none;
+        border-radius: 5px;
+        border: 1px solid #DDD;
+        cursor: pointer;
+        margin: 0 2px;
 
-          &:hover {
-            color: #2320d3;
-            border-color: #2320d3;
-          }
+        &:hover, &.active {
+          color: #2320d3;
+          border-color: #2320d3;
         }
 
-      //   .popup-more {
-      //     display: none;
-      //   }
-      // }
+        img {
+          width: 20px;
+          width: 20px
+        }
+      }
 
       ul.list-selected-field {
         padding-left: 0;
