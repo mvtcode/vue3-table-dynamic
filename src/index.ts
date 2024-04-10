@@ -1,5 +1,6 @@
 import DynamicTable from "./components/DynamicTable.vue";
 import TableEditor from "./components/TableEditor.vue";
-import * as TableType from "./interfaces/table";
+import { VfField, Column, VfType } from "./interfaces/table";
 
-export { DynamicTable, TableEditor, TableType };
+export type { VfField, Column };
+export { DynamicTable, TableEditor, VfType };

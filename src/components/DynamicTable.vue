@@ -122,7 +122,7 @@ const getValue = computed(() => {
         const rowValue = row[fieldInfo.vfAcutalField as string];
         if(Array.isArray(rowValue)) {
           const vArr = fieldInfo.templateShow ? rowValue.map((item: any) => render(fieldInfo.templateShow as string, {$item: item})).join('') : rowValue.join(', ');
-          values.push(vArr);
+          values.push(escapeHtml(vArr));
           continue;
         }
 

@@ -1,17 +1,17 @@
 {
-  "name": "vue3-table-dynamic",
+  "name": "vue3-flexi-data-table",
   "private": true,
-  "version": "1.0.0",
+  "version": "0.0.1",
   "author": "tanmv",
   "type": "module",
   "files": [
     "dist"
   ],
-  "module": "./dist/vue3-table-dynamic.js",
+  "module": "./dist/vue3-flexi-data-table.js",
   "exports": {
     ".": {
-      "import": "./dist/vue3-table-dynamic.js",
-      "require": "./dist/vue3-table-dynamic.umd.cjs"
+      "import": "./dist/vue3-flexi-data-table.js",
+      "require": "./dist/vue3-flexi-data-table.umd.cjs"
     },
     "./style.css": "./dist/style.css"
   },
@@ -22,7 +22,7 @@
     "prebuild": "rimraf dist",
     "build": "vite build && vue-tsc --emitDeclarationOnly",
     "prepare": "npm run build",
-    "types": "vue-tsc ",
+    "types": "vue-tsc",
     "preview": "vite preview"
   },
   "dependencies": {
