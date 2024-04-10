@@ -10,9 +10,9 @@ export default defineConfig({
     lib: {
       // src/indext.ts is where we have exported the component(s)
       entry: resolve(__dirname, "src/index.ts"),
-      name: "BrianComponentLibrary",
+      name: "Vue3TableDynamic",
       // the name of the output files when the build is run
-      fileName: "brian-component-lib",
+      fileName: "vue3-table-dynamic",
     },
     rollupOptions: {
       // make sure to externalize deps that shouldn't be bundled

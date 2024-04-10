@@ -7,11 +7,11 @@
   "files": [
     "dist"
   ],
-  "module": "./dist/brian-component-lib.js",
+  "module": "./dist/vue3-table-dynamic.js",
   "exports": {
     ".": {
-      "import": "./dist/brian-component-lib.js",
-      "require": "./dist/brian-component-lib.umd.cjs"
+      "import": "./dist/vue3-table-dynamic.js",
+      "require": "./dist/vue3-table-dynamic.umd.cjs"
     },
     "./style.css": "./dist/style.css"
   },
