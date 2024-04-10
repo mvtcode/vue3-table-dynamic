@@ -1,12 +1,12 @@
 <template>
-  <DynamicTable fixed :height="250" :columns="columnsEdit" :columnTemplate="vfFields" :actions="actions" :data="data" @onSelectAction="onSelectAction" />
+  <DynamicTable fixed :height="250" :columns="columnsEdit" :templates="[...vfFields, ...icons, ...actions]" :data="data" @onCta="onCta" />
 
   <hr style="margin: 20px 0 0"/>
 
   <div class="grid">
     <div class="grid-item">
       <h4>Build columns</h4>
-      <TableEditor v-model="columnsEdit" :vfFields="vfFields" :actions="actions" />
+      <TableEditor v-model="columnsEdit" :vfFields="vfFields" :actions="actions" :icons="icons" />
     </div>
     <div class="grid-item">
       <h4>Template columns</h4>
@@ -64,7 +64,7 @@ const vfFields = ref<VfField[]> ([
     vfActualFieldTitle: 'Mã SV',
     templateShow: 'MSV: {{value}}',
     vfRenderFunc: (row: any) => {
-      return `ID: <strong>${row.id}</strong>`;
+      return `ID: <strong style="color: #F00">${row.id}</strong>`;
     }
   },
   {
@@ -87,6 +87,16 @@ const vfFields = ref<VfField[]> ([
     vfType: VfType.DATA,
     vfAcutalField: 'gender',
     vfActualFieldTitle: 'Giới tính',
+  },
+  {
+    vfTitle: 'Giới tính color',
+    vfCode: 'gender2',
+    vfType: VfType.DATA,
+    vfAcutalField: 'gender',
+    vfActualFieldTitle: 'Giới tính',
+    vfRenderFunc: (row: any) => {
+      return `<span style="color: ${row.gender === 'Nam' ? 'red' : 'blue'}">${row.gender}</span>`;
+    }
   },
   {
     vfTitle: 'Ngành học',
@@ -168,22 +178,112 @@ const actions: VfField[] = [
     vfTitle: 'Xem',
     vfCode: 'detail',
     vfType: VfType.ACTION,
-    vfAcutalField: 'detail',
+    // vfAcutalField: 'detail',
     vfActualFieldTitle: 'Xem',
   },
   {
     vfTitle: 'Sửa',
     vfCode: 'update',
     vfType: VfType.ACTION,
-    vfAcutalField: 'update',
+    // vfAcutalField: 'update',
     vfActualFieldTitle: 'Sửa',
   },
   {
     vfTitle: 'Xóa',
     vfCode: 'delete',
     vfType: VfType.ACTION,
-    vfAcutalField: 'delete',
+    // vfAcutalField: 'delete',
     vfActualFieldTitle: 'Xóa',
+  },
+  {
+    vfTitle: 'Đổi giới tính',
+    vfCode: 'chagnegender',
+    vfType: VfType.ACTION,
+    // vfAcutalField: 'chagnegender',
+    vfActualFieldTitle: 'Đổi giới tính',
+  },
+];
+
+const icons: VfField[] = [
+  {
+    vfTitle: 'bookmark',
+    vfCode: 'bookmark',
+    vfType: VfType.ICON,
+    // vfAcutalField: '',
+    vfActualFieldTitle: 'bookmark',
+    value: '/icons/bookmark.png',
+  },
+  {
+    vfTitle: 'envelope',
+    vfCode: 'envelope',
+    vfType: VfType.ICON,
+    // vfAcutalField: '',
+    vfActualFieldTitle: 'envelope',
+    value: '/icons/envelope.png',
+  },
+  {
+    vfTitle: 'home',
+    vfCode: 'home',
+    vfType: VfType.ICON,
+    // vfAcutalField: '',
+    vfActualFieldTitle: 'home',
+    value: '/icons/home.png',
+  },
+  {
+    vfTitle: 'marker',
+    vfCode: 'marker',
+    vfType: VfType.ICON,
+    // vfAcutalField: '',
+    vfActualFieldTitle: 'marker',
+    value: '/icons/marker.png',
+  },
+  {
+    vfTitle: 'paper-plane',
+    vfCode: 'paper-plane',
+    vfType: VfType.ICON,
+    // vfAcutalField: '',
+    vfActualFieldTitle: 'paper-plane',
+    value: '/icons/paper-plane.png',
+  },
+  {
+    vfTitle: 'phone-call',
+    vfCode: 'phone-call',
+    vfType: VfType.ICON,
+    // vfAcutalField: '',
+    vfActualFieldTitle: 'phone-call',
+    value: '/icons/phone-call.png',
+  },
+  {
+    vfTitle: 'settings',
+    vfCode: 'settings',
+    vfType: VfType.ICON,
+    // vfAcutalField: '',
+    vfActualFieldTitle: 'settings',
+    value: '/icons/settings.png',
+  },
+  {
+    vfTitle: 'star',
+    vfCode: 'star',
+    vfType: VfType.ICON,
+    // vfAcutalField: '',
+    vfActualFieldTitle: 'star',
+    value: '/icons/star.png',
+  },
+  {
+    vfTitle: 'user',
+    vfCode: 'user',
+    vfType: VfType.ICON,
+    // vfAcutalField: '',
+    vfActualFieldTitle: 'user',
+    value: '/icons/user.png',
+  },
+  {
+    vfTitle: 'users-alt',
+    vfCode: 'users-alt',
+    vfType: VfType.ICON,
+    // vfAcutalField: '',
+    vfActualFieldTitle: 'users-alt',
+    value: '/icons/users-alt.png',
   },
 ];
 
@@ -288,7 +388,7 @@ const dataEdit = computed({
   }
 });
 
-const columns: Column[] = [ { "title": "Mã sinh viên", "fieldCodes": [ "id" ] }, { "title": "Họ và tên", "fieldCodes": [ "name" ] }, { "title": "Ngành học", "fieldCodes": [ "major", "newline", "gpa2" ] }, { "title": "Khóa học", "fieldCodes": [ "courses2" ] }, { "title": "Địa chỉ", "fieldCodes": [ "districtName", "space", "minus", "space", "provinceName" ] }, { "title": "Giới tính", "fieldCodes": [ "gender", "newline", "age" ] }, { "title": "Trạng thái", "fieldCodes": [ "status" ] }, { "title": "Actions", "fieldCodes": [ "detail", "space", "vertical", "space", "update", "space", "vertical", "space", "delete" ] } ];
+const columns: Column[] = [ { "title": "Mã sinh viên", "fieldCodes": [ "idFun" ] }, { "title": "Họ và tên", "fieldCodes": [ "name", "space", "minus", "space", "detail" ] }, { "title": "Ngành học", "fieldCodes": [ "major", "newline", "gpa2" ] }, { "title": "Khóa học", "fieldCodes": [ "courses2" ] }, { "title": "Địa chỉ", "fieldCodes": [ "districtName", "space", "minus", "space", "provinceName" ] }, { "title": "Giới tính", "fieldCodes": [ "gender2", "newline", "age" ] }, { "title": "Trạng thái", "fieldCodes": [ "star", "space", "status" ] }, { "title": "Actions", "fieldCodes": [ "detail", "space", "vertical", "space", "update", "space", "vertical", "space", "delete", "newline", "chagnegender" ] } ];
 
 const columnsEdit = ref<Column[]>(
   columns.map(column => {
@@ -307,7 +407,7 @@ const columnShow = computed (() => {
 });
 
 const actionSelects = ref<string[]>([]);
-const onSelectAction = (action: string, row: any, index: number) => {
+const onCta = (action: string, row: any, index: number) => {
   actionSelects.value.push(`Event: ${action} | index: ${index} | id: ${row.id}`);
 }
 </script>

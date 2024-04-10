@@ -2,6 +2,7 @@ export enum VfType {
   DATA = 'DATA',
   SYMBOL = 'SYMBOL',
   ACTION = 'ACTION',
+  ICON = 'ICON',
 }
 
 export interface VfField {
@@ -9,7 +10,7 @@ export interface VfField {
   vfCode: string;
   vfType: VfType;
   vfAcutalField: string;
-  vfActualFieldTitle: string;
+  vfActualFieldTitle?: string;
   vfRenderFunc?: (row: any, column: VfField, index: number) => string;
   enum?: {[key: string]: string | number};
   value?: string;
