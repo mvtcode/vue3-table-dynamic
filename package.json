@@ -7,7 +7,6 @@
   "files": [
     "dist"
   ],
-  "main": "./dist/brian-component-lib.umd.cjs",
   "module": "./dist/brian-component-lib.js",
   "exports": {
     ".": {
@@ -16,10 +15,13 @@
     },
     "./style.css": "./dist/style.css"
   },
+  "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
     "dev": "vite",
+    "prebuild": "rimraf dist",
     "build": "vite build && vue-tsc --emitDeclarationOnly",
+    "prepare": "npm run build",
     "types": "vue-tsc ",
     "preview": "vite preview"
   },
@@ -33,6 +35,7 @@
     "@types/escape-html": "^1.0.4",
     "@types/node": "^20.12.2",
     "@vitejs/plugin-vue": "^5.0.4",
+    "rimraf": "^5.0.5",
     "sass": "^1.72.0",
     "typescript": "^5.2.2",
     "vite": "^5.2.0",
