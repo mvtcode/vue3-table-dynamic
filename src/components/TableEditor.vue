@@ -21,10 +21,46 @@
             <li class="list-group-item" :class="{'hover': element.isDrag}">
               <div class="label align-items-center" @drop="e => onDrop(e, element)" @dragover="e => onDragover(e, element)" @dragleave="e => onDragleave(e, element)">
                 <div class="align-items-center">
-                  <span class="handle">☰</span> <input class="input-title" type="text" v-model="element.title" placeholder="Column name"/>
+                  <span class="handle">☰</span>
+
+                  <Popper placement="right-start" arrow>
+                    <button class="btn-more">⋯</button>
+                    <template #content>
+                      <div class="popover-action">
+                        <div>
+                          <button class="btn-more" :class="{active: (element.align || 'left') === 'left'}" @click="element.align = 'left'">
+                            <img :src="AlignLeftIcon" />
+                          </button>
+                          <button class="btn-more" :class="{active: element.align === 'center'}" @click="element.align = 'center'">
+                            <img :src="AlignCenterIcon" />
+                          </button>
+                          <button class="btn-more" :class="{active: element.align === 'right'}" @click="element.align = 'right'">
+                            <img :src="AlignRightIcon" />
+                          </button>
+                        </div>
+                        <div style="margin-top: 4px">
+                          <button class="btn-more" :class="{active: element.vAlign === 'top'}" @click="element.vAlign = 'top'">
+                            <img :src="VerticalAlignTopIcon" />
+                          </button>
+                          <button class="btn-more" :class="{active: (element.vAlign || 'middle') === 'middle'}" @click="element.vAlign = 'middle'">
+                            <img :src="VerticalAlignCenterIcon" />
+                          </button>
+                          <button class="btn-more" :class="{active: element.vAlign === 'bottom'}" @click="element.vAlign = 'bottom'">
+                            <img :src="VerticalAlignBottomIcon" />
+                          </button>
+                        </div>
+                      </div>
+                      <div></div>
+                    </template>
+                  </Popper>
+                  
+                  <input class="input-title" type="text" v-model="element.title" placeholder="Column name"/>
                 </div>
                 <ul class="list-selected-field">
-                  <li v-for="vfCode in element.fieldCodes" :key="vfCode"> {{ mapFieldInfo[vfCode]?.vfTitle }} </li>
+                  <li v-for="vfCode in element.fieldCodes" :key="vfCode">
+                    <img v-if="mapFieldInfo[vfCode]?.vfType === VfType.ICON" class="icon-selected":src="mapFieldInfo[vfCode]?.value" />
+                    <span v-else>{{ mapFieldInfo[vfCode]?.vfTitle }}</span>
+                  </li>
                   <li v-show="!element.fieldCodes.length" class="no-data">Kéo field vào đây</li>
                 </ul>
               </div>
@@ -67,6 +103,15 @@
             </li>
           </ul>
         </div>
+        <div style="margin-top: 10px">
+          <h5>Icons</h5>
+          <hr style="margin: 5px 0"/>
+          <ul class="list-field-symbol">
+            <li v-for="field in icons" :key="field.vfAcutalField">
+              <img :src="field.value" class="icon" draggable="true" @dragstart="e => onDragstart(e, field)"/>
+            </li>
+          </ul>
+        </div>
       </div>
     </div>
   </div>
@@ -76,13 +121,22 @@
 import { computed } from 'vue';
 import draggable from "vuedraggable";
 import { toJson } from '@/utils/parse';
-import { VfField, VariantsField, Column } from '@/interfaces/table';
-import { symbols } from '@/constants/otherField';
+import { VfField, VariantsField, Column, VfType } from '@/interfaces/table';
+import { symbols } from '@/constants/symbols';
+import Popper from "vue3-popper";
+
+import AlignLeftIcon from '@/assets/icons/align-left.svg';
+import AlignCenterIcon from '@/assets/icons/align-center.svg';
+import AlignRightIcon from '@/assets/icons/align-right.svg';
+import VerticalAlignTopIcon from '@/assets/icons/vertal-align-top.svg';
+import VerticalAlignCenterIcon from '@/assets/icons/vertal-align-center.svg';
+import VerticalAlignBottomIcon from '@/assets/icons/vertal-align-bottom.svg';
 
 interface Props {
   modelValue: Column[];
   vfFields: VfField[];
   actions: VfField[];
+  icons: VfField[];
 }
 const props = defineProps<Props>();
 
@@ -100,7 +154,7 @@ const columnsEdit = computed({
 })
 
 const columnsTemplate = computed(() => {
-  return [...symbols, ...props.actions, ...props.vfFields];
+  return [...symbols, ...props.actions, ...props.icons, ...props.vfFields];
 });
 
 const mapFieldInfo = computed(() => {
@@ -117,7 +171,7 @@ const listFields = computed<VariantsField[]>(() => {
   for(const vfField of props.vfFields) {
     if (mapField[vfField.vfAcutalField] === undefined) {
       list.push({
-        title: vfField.vfActualFieldTitle,
+        title: vfField.vfActualFieldTitle || '',
         field: vfField.vfAcutalField,
         variants: [vfField],
       });
@@ -261,7 +315,8 @@ const closeIndex = (index: number) => {
       li {
         display: inline-block;
         margin-bottom: 4px;
-        .item {
+
+        .item, .icon {
           border-radius: 5px;
           border: 1px solid #DDD;
           padding: 2px 4px;
@@ -269,6 +324,10 @@ const closeIndex = (index: number) => {
           min-width: 20px;
           text-align: center;
           cursor: grab;
+        }
+
+        .icon {
+          height: 18px;
         }
       }
     }
@@ -309,12 +368,30 @@ ul.list-group {
         border: none;
         border-bottom: 1px #ddd dotted;
         outline: none;
-        width: 150px;
+        width: 120px;
         margin-left: 4px;
       }
 
       .handle {
         cursor: move;
+      }
+
+      .btn-more {
+        background: none;
+        border-radius: 5px;
+        border: 1px solid #DDD;
+        cursor: pointer;
+        margin: 0 2px;
+
+        &:hover, &.active {
+          color: #2320d3;
+          border-color: #2320d3;
+        }
+
+        img {
+          width: 20px;
+          width: 20px
+        }
       }
 
       ul.list-selected-field {
@@ -334,6 +411,15 @@ ul.list-group {
 
           &:first-child {
             margin-left: 4px;
+          }
+
+          &:has(.icon-selected) {
+            padding: 2px;
+          }
+
+          .icon-selected {
+            height: 12px;
+            margin-bottom: -2px;
           }
 
           &.no-data {

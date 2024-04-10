@@ -8,8 +8,8 @@
       </thead>
       <tbody>
         <tr v-for="(row, index) in data" :key="index">
-          <td v-for="(column, index2) in columns" :key="index2" :class="{'drag-over': column.isDrag}">
-            <div v-html="getValue(row, column, index)" />
+          <td v-for="(column, index2) in columns" :key="index2" :class="{'drag-over': column.isDrag}" :style="{'text-align': (column.align || 'left'), 'vertical-align': (column.vAlign || 'middle')}">
+            <div class="td-line" v-html="getValue(row, column, index)" />
           </td>
         </tr>
       </tbody>
@@ -20,12 +20,12 @@
 <script setup lang="ts">
 import { defineProps, computed, onMounted, ref, onBeforeUnmount } from "vue";
 import { Column, VfField, VfType } from '@/interfaces/table';
-import { symbols } from '@/constants/otherField';
+import { symbols } from '@/constants/symbols';
+import escapeHtml from 'escape-html';
 
 interface Props {
   columns: Column[];
-  columnTemplate: VfField[];
-  actions: VfField[];
+  templates: VfField[];
   data: any[];
   height: number;
   fixed: boolean;
@@ -39,7 +39,7 @@ interface FlattenedObject {
 }
 
 const emit = defineEmits<{
-  (e: "onSelectAction", action: string, row: any, index: number): void;
+  (e: "onCta", action: string, row: any, index: number): void;
 }>();
 
 const prefixFunction = 'tdac';
@@ -50,7 +50,7 @@ onMounted(() => {
   const w: any = window;
   w[callFunction.value] = function (action: string, index: number) {
     const row = props.data[index];
-    emit('onSelectAction', action, row, index);
+    emit('onCta', action, row, index);
   }
 });
 
@@ -60,10 +60,6 @@ onBeforeUnmount(() => {
     w[callFunction.value] = undefined;
     delete w[callFunction.value];
   }
-})
-
-const vfFields = computed(() => {
-  return [...symbols, ...props.actions, ...props.columnTemplate];
 })
 
 function flattenObject(obj: any, parentKey: string = '', result: FlattenedObject = {}): FlattenedObject {
@@ -88,7 +84,7 @@ const render = (template: string, values: {[key: string]: any}): string => {
 }
 
 const mapFieldInfo = computed(() => {
-  return vfFields.value.reduce((map: {[vfCode: string]: VfField}, field: VfField) => {
+  return [...props.templates, ...symbols].reduce((map: {[vfCode: string]: VfField}, field: VfField) => {
     map[field.vfCode] = field;
     return map;
   }, {});
@@ -106,7 +102,13 @@ const getValue = computed(() => {
         }
 
         if (fieldInfo.vfType === VfType.ACTION) {
-          const value = `<span class="btn btn-${fieldInfo.vfAcutalField}" onClick="${callFunction.value}('${fieldInfo.vfAcutalField}', ${index})">${fieldInfo?.vfTitle || ''}</span>`;
+          const value = `<span class="btn btn-${fieldInfo.vfAcutalField}" onClick="${callFunction.value}('${fieldInfo.vfCode}', ${index})">${fieldInfo?.vfTitle || ''}</span>`;
+          values.push(value);
+          continue;
+        }
+
+        if (fieldInfo.vfType === VfType.ICON) {
+          const value = `<img class="icon" src="${fieldInfo.value}"/>`;
           values.push(value);
           continue;
         }
@@ -128,10 +130,11 @@ const getValue = computed(() => {
         let value = objectRow[fieldInfo.vfAcutalField];
         if (fieldInfo?.enum && Object.keys(fieldInfo.enum).length > 0) {
           value = fieldInfo.enum[value] || value;
+          value = escapeHtml(value);
         }
 
         if (fieldInfo?.templateShow) {
-          value = render(fieldInfo?.templateShow, {value});
+          value = render(fieldInfo?.templateShow, {value: escapeHtml(value)});
         }
 
         values.push(value);
@@ -145,5 +148,9 @@ const getValue = computed(() => {
 <style lang="scss" scoped>
 .drag-over {
   color: #F00;
+}
+
+.icon {
+  height: 18px;
 }
 </style>
